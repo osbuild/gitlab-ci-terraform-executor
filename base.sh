@@ -1,3 +1,12 @@
 #!/bin/bash
 
-TERRAFORM_PATH=/home/centos/gitlab-ci-terraform
+BASE="/home/$(whoami)"
+mkdir -p "${BASE}/{builds,cache}"
+
+TERRAFORM_JOBS="${BASE}/terraform-jobs"
+mkdir -p "${TERRAFORM_JOBS}"
+
+TERRAFORM_JOB="${TERRAFORM_JOBS}/${CUSTOM_ENV_CI_JOB_ID}"
+mkdir -p "${TERRAFORM_JOB}"
+
+TERRAFORM=terraform -chdir="$TERRAFORM_JOB"

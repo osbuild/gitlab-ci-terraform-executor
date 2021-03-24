@@ -2,6 +2,6 @@
 
 source /home/centos/gitlab-runner/base.sh
 
-terraform -chdir="${TERRAFORM_PATH}/aws-fedora-33-x86_64/" destroy -auto-approve "-state=states/${CUSTOM_ENV_CI_JOB_ID}.tfstate"
+TERRAFORM destroy -auto-approve
 
-rm -rf "${TERRAFORM_PATH}/aws-fedora-33-x86_64/states/${CUSTOM_ENV_CI_JOB_ID}"
+rm -rf "$TERRAFORM_JOB"

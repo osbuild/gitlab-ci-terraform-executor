@@ -2,6 +2,6 @@
 
 source /home/centos/gitlab-runner/base.sh
 
-VM_IP=$(terraform -chdir="${TERRAFORM_PATH}/aws-fedora-33-x86_64/" output "-state=states/${CUSTOM_ENV_CI_JOB_ID}.tfstate" -json | jq -r .instance_ips.value[0])
+VM_IP=$(TERRAFORM output -json | jq -r .instance_ips.value[0])
 
 ssh -i ~/.ssh/legacy_id_rsa -o StrictHostKeyChecking=no fedora@"$VM_IP" /bin/bash < "${1}"

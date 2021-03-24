@@ -2,12 +2,15 @@
 
 source /home/centos/gitlab-runner/base.sh
 
-mkdir -p "${TERRAFORM_PATH}/aws-fedora-33-x86_64/states/${CUSTOM_ENV_CI_JOB_ID}"
+TEMP=$(mktemp -d)
+git clone https://github.com/osbuild/gitlab-ci-terraform.git "$TEMP"
+mv "$TEMP/aws-fedora-33-x86_64/*" "$TERRAFORM_JOB/"
+rm -rf "$TEMP"
 
-terraform -chdir="${TERRAFORM_PATH}/aws-fedora-33-x86_64/" init
-terraform -chdir="${TERRAFORM_PATH}/aws-fedora-33-x86_64/" apply -auto-approve "-state=states/${CUSTOM_ENV_CI_JOB_ID}/state.tfstate"
+TERRAFORM init
+TERRAFORM apply -auto-approve
 
-VM_IP=$(terraform -chdir="${TERRAFORM_PATH}/aws-fedora-33-x86_64/" output "-state=states/${CUSTOM_ENV_CI_JOB_ID}/state.tfstate" -json | jq -r .instance_ips.value[0])
+VM_IP=$(TERRAFORM output -json | jq -r .instance_ips.value[0])
 
 echo "Waiting for sshd to be available"
 for i in $(seq 1 30); do
