@@ -3,6 +3,6 @@
 currentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "${currentDir}/base.sh"
 
-VM_IP=$(TERRAFORM output -json | jq -r .instance_ips.value[0])
+VM_IP=$($TERRAFORM output -json | jq -r .instance_ips.value[0])
 
 ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no fedora@"$VM_IP" /bin/bash < "${1}"
