@@ -1,0 +1,24 @@
+#!/bin/bash
+
+terraform -chdir=/home/obudai/gitlab/terraform/fedora-33/ init
+terraform -chdir=/home/obudai/gitlab/terraform/fedora-33/ apply -auto-approve "-state=states/${CUSTOM_ENV_CI_JOB_ID}.tfstate"
+
+VM_IP=$(terraform -chdir=/home/obudai/gitlab/terraform/fedora-33/ output "-state=states/${CUSTOM_ENV_CI_JOB_ID}.tfstate" -json | jq -r .instance_ips.value[0])
+
+echo "Waiting for sshd to be available"
+for i in $(seq 1 30); do
+    if ssh -i ~/.ssh/legacy_id_rsa -o StrictHostKeyChecking=no fedora@"$VM_IP" >/dev/null 2>/dev/null; then
+        break
+    fi
+
+    if [ "$i" == "30" ]; then
+        echo 'Waited 30 seconds for sshd to start, exiting...'
+        # Inform GitLab Runner that this is a system failure, so it
+        # should be retried.
+        exit "$SYSTEM_FAILURE_EXIT_CODE"
+    fi
+
+    sleep 1s
+done
+
+ssh -i ~/.ssh/legacy_id_rsa -o StrictHostKeyChecking=no fedora@"$VM_IP" sudo dnf install -y git-core https://gitlab-runner-downloads.s3.amazonaws.com/latest/rpm/gitlab-runner_amd64.rpm

@@ -1,0 +1,6 @@
+#!/bin/bash
+pwd
+
+VM_IP=$(terraform -chdir=/home/obudai/gitlab/terraform/fedora-33/ output "-state=states/${CUSTOM_ENV_CI_JOB_ID}.tfstate" -json | jq -r .instance_ips.value[0])
+
+ssh -i ~/.ssh/legacy_id_rsa -o StrictHostKeyChecking=no fedora@"$VM_IP" /bin/bash < "${1}"

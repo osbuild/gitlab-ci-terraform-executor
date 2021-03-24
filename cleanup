@@ -1,0 +1,3 @@
+#!/bin/bash
+
+terraform -chdir=/home/obudai/gitlab/terraform/fedora-33/ destroy -auto-approve "-state=states/${CUSTOM_ENV_CI_JOB_ID}.tfstate"
