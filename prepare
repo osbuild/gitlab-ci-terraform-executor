@@ -1,16 +1,17 @@
 #!/bin/bash
 
-source /home/centos/gitlab-runner/base.sh
+currentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source "${currentDir}/base.sh"
 
 TEMP=$(mktemp -d)
 git clone https://github.com/osbuild/gitlab-ci-terraform.git "$TEMP"
-mv "$TEMP/aws-fedora-33-x86_64/*" "$TERRAFORM_JOB/"
+mv "$TEMP/aws-fedora-33-x86_64/"* "$TERRAFORM_JOB/"
 rm -rf "$TEMP"
 
-TERRAFORM init
-TERRAFORM apply -auto-approve
+$TERRAFORM init
+$TERRAFORM apply -auto-approve
 
-VM_IP=$(TERRAFORM output -json | jq -r .instance_ips.value[0])
+VM_IP=$($TERRAFORM output -json | jq -r .instance_ips.value[0])
 
 echo "Waiting for sshd to be available"
 for i in $(seq 1 30); do
