@@ -9,4 +9,4 @@ mkdir -p "${TERRAFORM_JOBS}"
 TERRAFORM_JOB="${TERRAFORM_JOBS}/${CUSTOM_ENV_CI_JOB_ID}"
 mkdir -p "${TERRAFORM_JOB}"
 
-TERRAFORM=terraform -chdir="$TERRAFORM_JOB"
+TERRAFORM="terraform -chdir=$TERRAFORM_JOB"
