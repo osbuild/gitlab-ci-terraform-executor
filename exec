@@ -1,0 +1,14 @@
+#!/bin/bash
+# exec is used to run all scripts and after_scripts from .gitlab-ci.yml.
+# This script is always run MULTIPLE TIMES for each job.
+# The script to be run on the remote machine is passed in $1.
+
+currentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+# shellcheck source=./base.sh
+source "${currentDir}/base.sh"
+
+set -eu
+
+VM_IP=$(cat "${JOB}/ip")
+
+$SSH "$(sshUser)@${VM_IP}" /bin/bash < "${1}"

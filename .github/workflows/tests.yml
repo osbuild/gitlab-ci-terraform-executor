@@ -1,0 +1,26 @@
+name: Tests
+
+# NOTE(mhayden): Restricting branches prevents jobs from being doubled since
+# a push to a pull request triggers two events.
+on:
+  pull_request:
+    branches:
+      - "*"
+  push:
+    branches:
+      - main
+
+jobs:
+  shellcheck:
+    name: "🐚 Shellcheck"
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@1.0.0
+        with:
+          check_together: 'yes'
+        env:
+          SHELLCHECK_OPTS: -e SC2002 # allow useless cats to live inside our codebase

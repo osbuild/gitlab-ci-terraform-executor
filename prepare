@@ -1,0 +1,93 @@
+#!/bin/bash
+# prepare is run as the first script of a job. Its purpose is to create a new
+# instance using terraform and install the gitlab-runner on it.
+
+currentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+# shellcheck source=./base.sh
+source "${currentDir}/base.sh"
+
+set -eu
+
+# run clean-up if anything errors (with set -e)
+function cleanup {
+   "${currentDir}/cleanup"
+}
+trap cleanup ERR
+
+TERRAFORM_COMMIT=$(curl -L "$CUSTOM_ENV_CI_PROJECT_URL/-/raw/$CUSTOM_ENV_CI_COMMIT_SHA/schutzbot/terraform")
+
+# Get all terraform config files
+TEMP=$(mktemp -d)
+git clone https://github.com/osbuild/gitlab-ci-terraform.git "$TEMP"
+git -C "$TEMP" checkout "$TERRAFORM_COMMIT"
+
+# If maxInstances are defined for this runner, wait until we have a free slot.
+# Each runner type has its own directory - in each of these directories,
+# there's one directory for each job. Therefore, we know how many jobs
+# are running for a specific runner type. This script periodically checks
+# how many jobs are running on a runner type. If there are less jobs than
+# MAX_JOBS, it just creates a new directory here to "allocate a slot".
+# Note that this is racy but in reality it works good enough.
+MAX_JOBS=$(cat "$TEMP/${CUSTOM_ENV_RUNNER}/config.json" | jq -r .maxInstances)
+
+if [[ $MAX_JOBS != "null" ]]; then
+  while true; do
+    # ShellCheck prefers `find` over `ls`, `ls` should be fine though in this
+    # case
+    # shellcheck disable=SC2012
+    COUNT=$(ls "$RUNNER_DIR" | wc -l)
+    if [[ $COUNT < $MAX_JOBS ]]; then
+      break
+    fi
+    echo Waiting for a free runner slot...
+    sleep 10
+  done
+fi
+
+mv "$TEMP" "$JOB"
+
+if [ "${CUSTOM_ENV_INTERNAL_NETWORK:-}" ]; then
+  echo "internal_network = true" > "$JOB/${CUSTOM_ENV_RUNNER}/terraform.tfvars"
+fi
+
+# Spin up the instance
+$TERRAFORM init
+$TERRAFORM apply -auto-approve
+
+# Get its IP address and cache it in $JOB/ip. `terraform output` is actually
+# pretty expensive call.
+VM_IP=$($TERRAFORM output -json | jq -r .ip_address.value[0])
+echo "${VM_IP}" > "${JOB}/ip"
+
+# Wait for the machine.
+echo "Waiting for sshd to be available"
+for i in $(seq 1 90); do
+    if $SSH "$(sshUser)@${VM_IP}" >/dev/null 2>/dev/null; then
+        break
+    fi
+
+    if [ "$i" == "90" ]; then
+        echo 'Waited 90 seconds for sshd to start, exiting...'
+        # Inform GitLab Runner that this is a system failure, so it
+        # should be retried.
+        exit "$SYSTEM_FAILURE_EXIT_CODE"
+    fi
+
+    sleep 1s
+done
+
+# RHEL in OpenStack must be subscribed here in order to install gitlab-runner
+# dependencies (git)
+SUBSCRIPTION_REQUIRED=$(jq -r '.subscriptionNeeded' "${JOB}/${CUSTOM_ENV_RUNNER}/config.json")
+if [[ $SUBSCRIPTION_REQUIRED == "true" ]]; then
+  set +x
+  echo "${CUSTOM_ENV_RHN_REGISTRATION_SCRIPT}" | $SSH "$(sshUser)@${VM_IP}"
+fi
+
+PREPARE_SCRIPT=$(jq -r '.prepareScript' "${JOB}/${CUSTOM_ENV_RUNNER}/config.json")
+if [[ $PREPARE_SCRIPT != "null" ]]; then
+  echo "$PREPARE_SCRIPT" | $SSH "$(sshUser)@${VM_IP}" bash
+fi
+
+# Install gitlab-runner
+$SSH "$(sshUser)@${VM_IP}" sudo dnf install -y "https://gitlab-runner-downloads.s3.amazonaws.com/latest/rpm/gitlab-runner_$(runnerArch).rpm"
