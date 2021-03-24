@@ -4,4 +4,4 @@ source /home/centos/gitlab-runner/base.sh
 
 VM_IP=$(TERRAFORM output -json | jq -r .instance_ips.value[0])
 
-ssh -i ~/.ssh/legacy_id_rsa -o StrictHostKeyChecking=no fedora@"$VM_IP" /bin/bash < "${1}"
+ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no fedora@"$VM_IP" /bin/bash < "${1}"
