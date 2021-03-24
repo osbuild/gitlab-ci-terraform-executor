@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 BASE="/home/$(whoami)"
 mkdir -p "${BASE}/{builds,cache}"
 
