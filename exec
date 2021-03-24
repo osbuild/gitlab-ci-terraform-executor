@@ -9,4 +9,4 @@ VM_IP=$($TERRAFORM output -json | jq -r .instance_ips.value[0])
 
 cat "${1}"
 
-ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no fedora@"$VM_IP" /bin/bash < "${1}"
+ssh -i ~/.ssh/id_rsa -o ServerAliveInterval=60 -o StrictHostKeyChecking=no fedora@"$VM_IP" /bin/bash < "${1}"
