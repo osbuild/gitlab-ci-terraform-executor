@@ -17,7 +17,7 @@ VM_IP=$($TERRAFORM output -json | jq -r .instance_ips.value[0])
 
 echo "Waiting for sshd to be available"
 for i in $(seq 1 30); do
-    if ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no fedora@"$VM_IP" >/dev/null 2>/dev/null; then
+    if $SSH fedora@"$VM_IP" >/dev/null 2>/dev/null; then
         break
     fi
 
@@ -31,4 +31,4 @@ for i in $(seq 1 30); do
     sleep 1s
 done
 
-ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no fedora@"$VM_IP" sudo dnf install -y git-core https://gitlab-runner-downloads.s3.amazonaws.com/latest/rpm/gitlab-runner_amd64.rpm
+$SSH fedora@"$VM_IP" sudo dnf install -y git-core https://gitlab-runner-downloads.s3.amazonaws.com/latest/rpm/gitlab-runner_amd64.rpm

@@ -13,4 +13,4 @@ mkdir -p "${TERRAFORM_JOB}"
 
 TERRAFORM="terraform -chdir=$TERRAFORM_JOB"
 
-echo $TERRAFORM
+SSH="ssh -o ServerAliveInterval=60 -o StrictHostKeyChecking=no"
