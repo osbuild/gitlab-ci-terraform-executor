@@ -16,13 +16,13 @@ $TERRAFORM apply -auto-approve
 VM_IP=$($TERRAFORM output -json | jq -r .instance_ips.value[0])
 
 echo "Waiting for sshd to be available"
-for i in $(seq 1 30); do
+for i in $(seq 1 90); do
     if $SSH "$(sshUser)@${VM_IP}" >/dev/null 2>/dev/null; then
         break
     fi
 
-    if [ "$i" == "30" ]; then
-        echo 'Waited 30 seconds for sshd to start, exiting...'
+    if [ "$i" == "90" ]; then
+        echo 'Waited 90 seconds for sshd to start, exiting...'
         # Inform GitLab Runner that this is a system failure, so it
         # should be retried.
         exit "$SYSTEM_FAILURE_EXIT_CODE"
