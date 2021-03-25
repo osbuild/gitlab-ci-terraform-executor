@@ -23,3 +23,6 @@ function runnerArch() {
 
 set +x
 export OS_PROJECT_ID="${CUSTOM_ENV_OS_PROJECT_ID}"
+export OS_AUTH_URL="${CUSTOM_ENV_OS_AUTH_URL}"
+export OS_USERNAME="${CUSTOM_ENV_OS_USERNAME}"
+export OS_OS_PASSWORD="${CUSTOM_ENV_OS_PASSWORD}"
