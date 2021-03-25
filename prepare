@@ -21,7 +21,7 @@ if [[ $MAX_JOBS != "null" ]]; then
   done
 fi
 
-mv "$TEMP/${CUSTOM_ENV_RUNNER} "$TERRAFORM_JOB"
+mv "$TEMP/${CUSTOM_ENV_RUNNER}" "$TERRAFORM_JOB"
 rm -rf "$TEMP"
 
 $TERRAFORM init
