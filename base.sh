@@ -13,7 +13,7 @@ TERRAFORM_JOB="${RUNNER_DIR}/${CUSTOM_ENV_CI_JOB_ID}"
 
 TERRAFORM="terraform -chdir=$TERRAFORM_JOB"
 
-SSH="ssh -o ServerAliveInterval=60 -o StrictHostKeyChecking=no"
+SSH="ssh -t -o ServerAliveInterval=60 -o StrictHostKeyChecking=no"
 
 function sshUser() {
   cat "${TERRAFORM_JOB}/config.json" | jq -r '.user'
