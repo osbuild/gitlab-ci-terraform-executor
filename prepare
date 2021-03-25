@@ -45,6 +45,8 @@ for i in $(seq 1 90); do
     sleep 1s
 done
 
+echo $CUSTOM_ENV_RHN_REGISTRATION_SCRIPT
+
 SUBSCRIPTION_REQUIRED=$(cat "${TERRAFORM_JOB}/config.json" | jq -r '.subscriptionNeeded')
 
 if [[ $SUBCRIPTION_REQUIRED == "true" ]]; then
