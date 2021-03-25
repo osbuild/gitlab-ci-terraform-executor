@@ -2,7 +2,7 @@
 
 set -x
 
-echo "${CUSTOM_ENV_RHN_REGISTRATION_SCRIPT}"
+echo "${CUSTOM_ENV_RHN_REGISTRATION_SCRIPT}" | sh
 
 currentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "${currentDir}/base.sh"
