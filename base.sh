@@ -3,8 +3,6 @@
 set -x
 
 BASE="/home/$(whoami)"
-mkdir -p "${BASE}/{builds,cache}"
-
 TERRAFORM_JOBS="${BASE}/terraform-jobs"
 mkdir -p "${TERRAFORM_JOBS}"
 
