@@ -20,3 +20,6 @@ function sshUser() {
 function runnerArch() {
   cat "${TERRAFORM_JOB}/config.json" | jq -r '.runnerArch'
 }
+
+set +x
+export OS_PROJECT_ID="${CUSTOM_ENV_OS_PROJECT_ID}"
