@@ -7,6 +7,20 @@ source "${currentDir}/base.sh"
 
 TEMP=$(mktemp -d)
 git clone https://github.com/osbuild/gitlab-ci-terraform.git "$TEMP"
+
+MAX_JOBS=$(cat "$TEMP/${CUSTOM_ENV_RUNNER}/config.json" | jq -r .maxInstances)
+
+if [[ $MAX_JOBS != "null" ]]; then
+  while true; do
+    COUNT=$(ls test | wc -l)
+    if [[ $COUNT < $MAX_JOBS ]]; then
+      break
+    fi
+    echo Waiting for a free runner slot...
+    sleep 1
+  done
+fi
+
 mv "$TEMP/${CUSTOM_ENV_RUNNER}/"* "$TERRAFORM_JOB/"
 rm -rf "$TEMP"
 
