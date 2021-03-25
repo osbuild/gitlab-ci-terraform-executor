@@ -12,7 +12,7 @@ MAX_JOBS=$(cat "$TEMP/${CUSTOM_ENV_RUNNER}/config.json" | jq -r .maxInstances)
 
 if [[ $MAX_JOBS != "null" ]]; then
   while true; do
-    COUNT=$(ls test | wc -l)
+    COUNT=$(ls "$RUNNER_DIR" | wc -l)
     if [[ $COUNT < $MAX_JOBS ]]; then
       break
     fi
