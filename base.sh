@@ -14,3 +14,7 @@ mkdir -p "${TERRAFORM_JOB}"
 TERRAFORM="terraform -chdir=$TERRAFORM_JOB"
 
 SSH="ssh -o ServerAliveInterval=60 -o StrictHostKeyChecking=no"
+
+function sshUser() {
+  cat "${TERRAFORM_JOB}/config.json" | jq -r '.user'
+}
