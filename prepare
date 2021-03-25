@@ -45,13 +45,11 @@ for i in $(seq 1 90); do
     sleep 1s
 done
 
-echo $CUSTOM_ENV_TEST
-
 SUBSCRIPTION_REQUIRED=$(cat "${TERRAFORM_JOB}/config.json" | jq -r '.subscriptionNeeded')
 
 if [[ $SUBCRIPTION_REQUIRED == "true" ]]; then
   set +x
-  $SSH "$(sshUser)@${VM_IP}" <"${CUSTOM_ENV_RHN_REGISTRATION_SCRIPT}"
+  echo "${CUSTOM_ENV_RHN_REGISTRATION_SCRIPT}" | $SSH "$(sshUser)@${VM_IP}"
 fi
 
 $SSH "$(sshUser)@${VM_IP}" sudo dnf install -y git-core https://gitlab-runner-downloads.s3.amazonaws.com/latest/rpm/gitlab-runner_$(runnerArch).rpm
