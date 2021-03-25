@@ -45,10 +45,9 @@ for i in $(seq 1 90); do
     sleep 1s
 done
 
-set -x
 SUBSCRIPTION_REQUIRED=$(cat "${TERRAFORM_JOB}/config.json" | jq -r '.subscriptionNeeded')
 
-if [[ $SUBCRIPTION_REQUIRED == "true" ]]; then
+if [[ $SUBSCRIPTION_REQUIRED == "true" ]]; then
   set +x
   echo "${CUSTOM_ENV_RHN_REGISTRATION_SCRIPT}" | $SSH "$(sshUser)@${VM_IP}"
 fi
