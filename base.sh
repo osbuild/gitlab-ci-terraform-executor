@@ -16,3 +16,7 @@ SSH="ssh -o ServerAliveInterval=60 -o StrictHostKeyChecking=no"
 function sshUser() {
   cat "${TERRAFORM_JOB}/config.json" | jq -r '.user'
 }
+
+function runnerArch() {
+  cat "${TERRAFORM_JOB}/config.json" | jq -r '.runnerArch'
+}

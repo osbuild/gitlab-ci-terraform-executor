@@ -31,4 +31,4 @@ for i in $(seq 1 90); do
     sleep 1s
 done
 
-$SSH "$(sshUser)@${VM_IP}" sudo dnf install -y git-core https://gitlab-runner-downloads.s3.amazonaws.com/latest/rpm/gitlab-runner_amd64.rpm
+$SSH "$(sshUser)@${VM_IP}" sudo dnf install -y git-core https://gitlab-runner-downloads.s3.amazonaws.com/latest/rpm/gitlab-runner_$(runnerArch).rpm
