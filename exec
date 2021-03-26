@@ -7,4 +7,6 @@ source "${currentDir}/base.sh"
 
 VM_IP=$($TERRAFORM output -json | jq -r .instance_ips.value[0])
 
+cat "${1}"
+
 $SSH "$(sshUser)@${VM_IP}" /bin/bash < "${1}"
