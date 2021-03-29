@@ -1,0 +1,6 @@
+#!/bin/bash
+
+bash /tmp/gitlab-ci-script >/tmp/gitlab-ci-stdout 2>/tmp/gitlab-ci-stderr
+STATUS=$?
+
+echo $STATUS >/tmp/gitlab-ci-status
