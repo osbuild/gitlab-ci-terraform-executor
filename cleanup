@@ -7,4 +7,7 @@ source "${currentDir}/base.sh"
 
 $TERRAFORM destroy -auto-approve
 
+VM_IP=$(cat "${TERRAFORM_JOB}/ip")
+ssh-keygen -R "$VM_IP"
+
 rm -rf "$TERRAFORM_JOB"
