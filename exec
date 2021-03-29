@@ -2,10 +2,10 @@
 
 function get_logs() {
   STDOUT_LEN=$(expr $(wc -c <${TERRAFORM_JOB}/stdout) + 1)
-  $SSH "$(sshUser)@${VM_IP}" tail -c "$STDOUT_LEN" /tmp/gitlab-ci-stdout | tee -a ${TERRAFORM_JOB}/stdout
+  $SSH "$(sshUser)@${VM_IP}" tail -c "+$STDOUT_LEN" /tmp/gitlab-ci-stdout | tee -a ${TERRAFORM_JOB}/stdout
 
   STDERR_LEN=$(expr $(wc -c <${TERRAFORM_JOB}/stderr) + 1)
-  $SSH "$(sshUser)@${VM_IP}" tail -c "$STDERR_LEN" /tmp/gitlab-ci-stderr | tee -a ${TERRAFORM_JOB}/stderr >&2
+  $SSH "$(sshUser)@${VM_IP}" tail -c "+$STDERR_LEN" /tmp/gitlab-ci-stderr | tee -a ${TERRAFORM_JOB}/stderr >&2
 
 }
 
