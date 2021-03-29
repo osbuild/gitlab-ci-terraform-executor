@@ -16,12 +16,12 @@ $SSH "$(sshUser)@${VM_IP}" '/tmp/gitlab-ci-remote-exec >/tmp/gitlab-ci-exec-stdo
 touch "${TERRAFORM_JOB}/stdout"
 
 while true; do
-  STDOUT_LEN=$(expr $(wc -c </tmp/stdout) + 1)
+  STDOUT_LEN=$(expr $(wc -c <${TERRAFORM_JOB}/stdout) + 1)
   $SSH "$(sshUser)@${VM_IP}" tail -c "$STDOUT_LEN" /tmp/gitlab-ci-stdout | tee -a ${TERRAFORM_JOB}/stdout
 
   STATUS=$($SSH "$(sshUser)@${VM_IP}" cat /tmp/gitlab-ci-status)
   if [[ "$STATUS" ]]; then
-    STDOUT_LEN=$(expr $(wc -c </tmp/stdout) + 1)
+    STDOUT_LEN=$(expr $(wc -c <${TERRAFORM_JOB}/stdout) + 1)
     $SSH "$(sshUser)@${VM_IP}" tail -c "$STDOUT_LEN" /tmp/gitlab-ci-stdout | tee -a ${TERRAFORM_JOB}/stdout
     $SSH "$(sshUser)@${VM_IP}" 'rm /tmp/gitlab-ci-*'
     rm ${TERRAFORM_JOB}/stdout
