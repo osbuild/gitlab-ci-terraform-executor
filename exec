@@ -1,5 +1,14 @@
 #!/bin/bash
 
+function get_logs() {
+  STDOUT_LEN=$(expr $(wc -c <${TERRAFORM_JOB}/stdout) + 1)
+  $SSH "$(sshUser)@${VM_IP}" tail -c "$STDOUT_LEN" /tmp/gitlab-ci-stdout | tee -a ${TERRAFORM_JOB}/stdout
+
+  STDERR_LEN=$(expr $(wc -c <${TERRAFORM_JOB}/stderr) + 1)
+  $SSH "$(sshUser)@${VM_IP}" tail -c "$STDERR_LEN" /tmp/gitlab-ci-stderr | tee -a ${TERRAFORM_JOB}/stderr >&2
+
+}
+
 set -x
 
 currentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
@@ -13,18 +22,17 @@ scp "${currentDir}/remote-exec" "$(sshUser)@${VM_IP}:/tmp/gitlab-ci-remote-exec"
 $SSH "$(sshUser)@${VM_IP}" touch /tmp/gitlab-ci-stdout /tmp/gitlab-ci-stderr
 $SSH "$(sshUser)@${VM_IP}" '/tmp/gitlab-ci-remote-exec >/tmp/gitlab-ci-exec-stdout 2>/tmp/gitlab-ci-exec-stderr &'
 
-touch "${TERRAFORM_JOB}/stdout"
+touch "${TERRAFORM_JOB}/stdout" "${TERRAFORM_JOB}/stderr"
 
 while true; do
-  STDOUT_LEN=$(expr $(wc -c <${TERRAFORM_JOB}/stdout) + 1)
-  $SSH "$(sshUser)@${VM_IP}" tail -c "$STDOUT_LEN" /tmp/gitlab-ci-stdout | tee -a ${TERRAFORM_JOB}/stdout
+  get_logs
 
   STATUS=$($SSH "$(sshUser)@${VM_IP}" cat /tmp/gitlab-ci-status)
   if [[ "$STATUS" ]]; then
-    STDOUT_LEN=$(expr $(wc -c <${TERRAFORM_JOB}/stdout) + 1)
-    $SSH "$(sshUser)@${VM_IP}" tail -c "$STDOUT_LEN" /tmp/gitlab-ci-stdout | tee -a ${TERRAFORM_JOB}/stdout
+    get_logs
+
     $SSH "$(sshUser)@${VM_IP}" 'rm /tmp/gitlab-ci-*'
-    rm ${TERRAFORM_JOB}/stdout
+    rm ${TERRAFORM_JOB}/stdout ${TERRAFORM_JOB}/stderr
     exit "$STATUS"
   fi
 done
