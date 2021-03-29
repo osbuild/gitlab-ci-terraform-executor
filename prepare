@@ -28,6 +28,7 @@ $TERRAFORM init
 $TERRAFORM apply -auto-approve
 
 VM_IP=$($TERRAFORM output -json | jq -r .instance_ips.value[0])
+echo "${VM_IP}" > "${TERRAFORM_JOB}/ip"
 
 echo "Waiting for sshd to be available"
 for i in $(seq 1 90); do
