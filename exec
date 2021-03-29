@@ -19,7 +19,7 @@ VM_IP=$($TERRAFORM output -json | jq -r .instance_ips.value[0])
 scp "$1" "$(sshUser)@${VM_IP}:/tmp/gitlab-ci-script"
 scp "${currentDir}/remote-exec" "$(sshUser)@${VM_IP}:/tmp/gitlab-ci-remote-exec"
 
-$SSH "$(sshUser)@${VM_IP}" touch /tmp/gitlab-ci-stdout /tmp/gitlab-ci-stderr
+$SSH "$(sshUser)@${VM_IP}" touch /tmp/gitlab-ci-stdout /tmp/gitlab-ci-stderr /tmp/gitlab-ci-status
 $SSH "$(sshUser)@${VM_IP}" '/tmp/gitlab-ci-remote-exec >/tmp/gitlab-ci-exec-stdout 2>/tmp/gitlab-ci-exec-stderr &'
 
 touch "${TERRAFORM_JOB}/stdout" "${TERRAFORM_JOB}/stderr"
