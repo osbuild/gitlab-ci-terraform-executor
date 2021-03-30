@@ -1,38 +1,71 @@
 #!/bin/bash
+# exec is used to run all scripts and after_scripts from .gitlab-ci.yml.
+# This script is always run MULTIPLE TIMES for each job.
+# The script to be run on the remote machine is passed in $1.
 
+# The simplest way to achieve this would be:
+# ssh user@machine bash <$1
+#
+# Unfortunately, connection to our internal VPC is not good enough so
+# one ssh connection for 1 hour long session doesn't always survive.
+# Therefore a more complex solution must have been invented:
+#
+# The script to be run is copied into the remote host's /tmp/gitlab-ci-script
+# Then, remote-exec is coped into /tmp/gitlab-ci-remote-exec and this script
+# is launched in background using ssh. The remote-exec script simply runs
+# the /tmp/gitlab-ci-script while redirecting stdout and stderr into files.
+# When the script finishes, its return value is also written into a file.
+#
+# Every second, these stdout and stderr files are downloaded. Then, the newly
+# appeared lines are printed locally so gitlab can fetch them and print them.
+# Also, the file with return value is checked - when it's not empty, the
+# content is returned by this script.
+
+# Helper to download the stdout and stderr and print them locally.
+# It uses $JOB/{stdout,stderr} to store the latest content and the next time
+# it's called, it prints only new bytes.
 function get_logs() {
-  STDOUT_LEN=$(expr $(wc -c <${TERRAFORM_JOB}/stdout) + 1)
-  $SSH "$(sshUser)@${VM_IP}" tail -c "+$STDOUT_LEN" /tmp/gitlab-ci-stdout | tee -a ${TERRAFORM_JOB}/stdout
+  STDOUT_LEN=$(wc -c <"${JOB}/stdout")
+  STDOUT_TAIL_START=$(( STDOUT_LEN + 1 ))
+  $SSH "$(sshUser)@${VM_IP}" tail -c "+$STDOUT_TAIL_START" /tmp/gitlab-ci-stdout | tee -a "${JOB}/stdout"
 
-  STDERR_LEN=$(expr $(wc -c <${TERRAFORM_JOB}/stderr) + 1)
-  $SSH "$(sshUser)@${VM_IP}" tail -c "+$STDERR_LEN" /tmp/gitlab-ci-stderr | tee -a ${TERRAFORM_JOB}/stderr >&2
+  STDERR_LEN=$(wc -c <"${JOB}/stderr")
+  STDERR_TAIL_START=$(( STDERR_LEN + 1 ))
+  $SSH "$(sshUser)@${VM_IP}" tail -c "+$STDERR_TAIL_START" /tmp/gitlab-ci-stderr | tee -a "${JOB}/stderr" >&2
 
 }
 
-set -x
+set -euo pipefail
 
 currentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+# shellcheck source=./base.sh
 source "${currentDir}/base.sh"
 
-VM_IP=$(cat "${TERRAFORM_JOB}/ip")
+VM_IP=$(cat "${JOB}/ip")
 
+# copy the scripts and create stdout, stderr and status files in /tmp
 scp "$1" "$(sshUser)@${VM_IP}:/tmp/gitlab-ci-script"
 scp "${currentDir}/remote-exec" "$(sshUser)@${VM_IP}:/tmp/gitlab-ci-remote-exec"
-
 $SSH "$(sshUser)@${VM_IP}" touch /tmp/gitlab-ci-stdout /tmp/gitlab-ci-stderr /tmp/gitlab-ci-status
+
+# run the script. By redirecting both output streams to files, ssh doesn't
+# wait for the script to finish.
 $SSH "$(sshUser)@${VM_IP}" '/tmp/gitlab-ci-remote-exec >/tmp/gitlab-ci-exec-stdout 2>/tmp/gitlab-ci-exec-stderr &'
 
-touch "${TERRAFORM_JOB}/stdout" "${TERRAFORM_JOB}/stderr"
+touch "${JOB}/stdout" "${JOB}/stderr"
 
 while true; do
   get_logs
 
+  # If the status file isn't empty, exit this script.
   STATUS=$($SSH "$(sshUser)@${VM_IP}" cat /tmp/gitlab-ci-status)
   if [[ "$STATUS" ]]; then
     get_logs
 
     $SSH "$(sshUser)@${VM_IP}" 'rm /tmp/gitlab-ci-*'
-    rm ${TERRAFORM_JOB}/stdout ${TERRAFORM_JOB}/stderr
+    rm "${JOB}/stdout" "${JOB}/stderr"
     exit "$STATUS"
   fi
+
+  sleep 1
 done

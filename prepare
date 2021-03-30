@@ -1,35 +1,53 @@
 #!/bin/bash
+# prepare is run as the first script of a job. Its purpose is to create a new
+# instance using terraform and install the gitlab-runner on it.
 
-set -x
+set -euo pipefail
 
 currentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+# shellcheck source=./base.sh
 source "${currentDir}/base.sh"
 
+# Get all terraform config files
 TEMP=$(mktemp -d)
 git clone https://github.com/osbuild/gitlab-ci-terraform.git "$TEMP"
 
+# If maxInstances are defined for this runner, wait until we have a free slot.
+# Each runner type has its own directory - in each of these directories,
+# there's one directory for each job. Therefore, we know how many jobs
+# are running for a specific runner type. This script periodically checks
+# how many jobs are running on a runner type. If there are less jobs than
+# MAX_JOBS, it just creates a new directory here to "allocate a slot".
+# Note that this is racy but in reality it works good enough.
 MAX_JOBS=$(cat "$TEMP/${CUSTOM_ENV_RUNNER}/config.json" | jq -r .maxInstances)
 
 if [[ $MAX_JOBS != "null" ]]; then
   while true; do
+    # ShellCheck prefers `find` over `ls`, `ls` should be fine though in this
+    # case
+    # shellcheck disable=SC2012
     COUNT=$(ls "$RUNNER_DIR" | wc -l)
     if [[ $COUNT < $MAX_JOBS ]]; then
       break
     fi
     echo Waiting for a free runner slot...
-    sleep 1
+    sleep 10
   done
 fi
 
-mv "$TEMP/${CUSTOM_ENV_RUNNER}" "$TERRAFORM_JOB"
+mv "$TEMP/${CUSTOM_ENV_RUNNER}" "$JOB"
 rm -rf "$TEMP"
 
+# Spin up the instance
 $TERRAFORM init
 $TERRAFORM apply -auto-approve
 
+# Get its IP address and cache it in $JOB/ip. `terraform output` is actually
+# pretty expensive call.
 VM_IP=$($TERRAFORM output -json | jq -r .instance_ips.value[0])
-echo "${VM_IP}" > "${TERRAFORM_JOB}/ip"
+echo "${VM_IP}" > "${JOB}/ip"
 
+# Wait for the machine.
 echo "Waiting for sshd to be available"
 for i in $(seq 1 90); do
     if $SSH "$(sshUser)@${VM_IP}" >/dev/null 2>/dev/null; then
@@ -46,11 +64,14 @@ for i in $(seq 1 90); do
     sleep 1s
 done
 
-SUBSCRIPTION_REQUIRED=$(cat "${TERRAFORM_JOB}/config.json" | jq -r '.subscriptionNeeded')
+# RHEL in OpenStack must be subscribed here in order to install gitlab-runner
+# dependencies (git)
+SUBSCRIPTION_REQUIRED=$(cat "${JOB}/config.json" | jq -r '.subscriptionNeeded')
 
 if [[ $SUBSCRIPTION_REQUIRED == "true" ]]; then
   set +x
   echo "${CUSTOM_ENV_RHN_REGISTRATION_SCRIPT}" | $SSH "$(sshUser)@${VM_IP}"
 fi
 
-$SSH "$(sshUser)@${VM_IP}" sudo dnf install -y git-core https://gitlab-runner-downloads.s3.amazonaws.com/latest/rpm/gitlab-runner_$(runnerArch).rpm
+# Install gitlab-runner
+$SSH "$(sshUser)@${VM_IP}" sudo dnf install -y "https://gitlab-runner-downloads.s3.amazonaws.com/latest/rpm/gitlab-runner_$(runnerArch).rpm"

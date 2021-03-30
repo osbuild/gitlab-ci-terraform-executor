@@ -1,13 +1,18 @@
 #!/bin/bash
 
-set -x
+# cleanup is used to delete the instance. Terraform can handle that.
+
+set -euo pipefail
 
 currentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+# shellcheck source=./base.sh
 source "${currentDir}/base.sh"
 
 $TERRAFORM destroy -auto-approve
 
-VM_IP=$(cat "${TERRAFORM_JOB}/ip")
+# Remove the host key from known_hosts.
+VM_IP=$(cat "${JOB}/ip")
 ssh-keygen -R "$VM_IP"
 
-rm -rf "$TERRAFORM_JOB"
+# Delete all job's data.
+rm -rf "$JOB"
