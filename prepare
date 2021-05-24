@@ -93,20 +93,6 @@ if [[ $NIGHTLY_REPO_VAR_NAME != "null" ]]; then
   # NB: repository name is important
 fi
 
-# DEBUG the remote machine
-echo "===== DEBUG ====="
-echo "NIGHTLY_REPO_VAR_NAME=${NIGHTLY_REPO_VAR_NAME}"
-echo "NIGHTLY_REPO_ENV=${NIGHTLY_REPO_ENV}"
-echo "CONTENTS=${!NIGHTLY_REPO_ENV}"
-
-echo "--------"
-export
-
-$SSH "$(sshUser)@${VM_IP}" ls -l /etc/yum.repos.d/
-echo "-------------------"
-$SSH "$(sshUser)@${VM_IP}" cat '/etc/yum.repos.d/*.repo'
-echo "===== END DEBUG ====="
-
 PREPARE_SCRIPT=$(jq -r '.prepareScript' "${JOB}/${CUSTOM_ENV_RUNNER}/config.json")
 if [[ $PREPARE_SCRIPT != "null" ]]; then
   echo "$PREPARE_SCRIPT" | $SSH "$(sshUser)@${VM_IP}" bash
