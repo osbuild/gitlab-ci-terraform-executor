@@ -84,15 +84,6 @@ if [[ $SUBSCRIPTION_REQUIRED == "true" ]]; then
   echo "${CUSTOM_ENV_RHN_REGISTRATION_SCRIPT}" | $SSH "$(sshUser)@${VM_IP}"
 fi
 
-NIGHTLY_REPO_VAR_NAME=$(jq -r '.nightlyRepoVarName' "${JOB}/${CUSTOM_ENV_RUNNER}/config.json")
-if [[ $NIGHTLY_REPO_VAR_NAME != "null" ]]; then
-  set +x
-  # indirect evaluation of the actual var name in CI
-  NIGHTLY_REPO_ENV="CUSTOM_ENV_${NIGHTLY_REPO_VAR_NAME}"
-  echo "${!NIGHTLY_REPO_ENV}" | $SSH "$(sshUser)@${VM_IP}" 'dd of=/etc/yum.repos.d/rhel8internal.repo'
-  # NB: repository name is important
-fi
-
 PREPARE_SCRIPT=$(jq -r '.prepareScript' "${JOB}/${CUSTOM_ENV_RUNNER}/config.json")
 if [[ $PREPARE_SCRIPT != "null" ]]; then
   echo "$PREPARE_SCRIPT" | $SSH "$(sshUser)@${VM_IP}" bash
