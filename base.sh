@@ -37,7 +37,7 @@ function runnerArch() {
 
 # Rename OpenStack authentication variables to the right names.
 set +x
-export OS_PROJECT_ID="${CUSTOM_ENV_OS_PROJECT_ID}"
-export OS_AUTH_URL="${CUSTOM_ENV_OS_AUTH_URL}"
-export OS_USERNAME="${CUSTOM_ENV_OS_USERNAME}"
-export OS_PASSWORD="${CUSTOM_ENV_OS_PASSWORD}"
+export OS_PROJECT_ID="${CUSTOM_ENV_OS_PROJECT_ID:-}"
+export OS_AUTH_URL="${CUSTOM_ENV_OS_AUTH_URL:-}"
+export OS_USERNAME="${CUSTOM_ENV_OS_USERNAME:-}"
+export OS_PASSWORD="${CUSTOM_ENV_OS_PASSWORD:-}"
