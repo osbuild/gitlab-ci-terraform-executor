@@ -30,7 +30,7 @@ git -C "$TEMP" checkout "$TERRAFORM_COMMIT"
 # Note that this is racy but in reality it works good enough.
 MAX_JOBS=$(cat "$TEMP/${CUSTOM_ENV_RUNNER}/config.json" | jq -r .maxInstances)
 
-if [[ $MAX_JOBS != "null" ]]; then
+if [[ $MAX_JOBS != "null" && $CUSTOM_ENV_CI_RUNNER_TAGS != "terraform/openstack" ]]; then
   while true; do
     # ShellCheck prefers `find` over `ls`, `ls` should be fine though in this
     # case
