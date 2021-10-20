@@ -19,9 +19,6 @@ mkdir -p "${RUNNER_DIR}"
 # define a directory for this specific job
 JOB="${RUNNER_DIR}/${CUSTOM_ENV_CI_JOB_ID}"
 
-# alias for launching terraform in the job's directory
-TERRAFORM="terraform -chdir=$JOB/${CUSTOM_ENV_RUNNER}"
-
 # ServerAliveInterval helps with bad connectivity from/to the internal
 # VPC
 SSH="ssh -o ServerAliveInterval=1 -o ServerAliveCountMax=600 -o StrictHostKeyChecking=no"
@@ -33,6 +30,19 @@ function sshUser() {
 
 function runnerArch() {
   cat "${JOB}/${CUSTOM_ENV_RUNNER}/config.json" | jq -r '.runnerArch'
+}
+
+function terraform-wrapper() {
+  while true; do
+    COUNT=$(pgrep -cf /usr/bin/terraform; true)
+    if (( $COUNT < 5 )); then
+      break
+    fi
+    echo "Too many terraform processes ($COUNT) at the moment, waiting..." >&2
+    sleep 10
+  done
+
+  terraform -chdir=$JOB/${CUSTOM_ENV_RUNNER} "$@"
 }
 
 # Rename OpenStack authentication variables to the right names.
