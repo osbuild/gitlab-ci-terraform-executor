@@ -35,14 +35,14 @@ function runnerArch() {
 function terraform-wrapper() {
   while true; do
     COUNT=$(pgrep -cf /usr/bin/terraform; true)
-    if (( $COUNT < 5 )); then
+    if (( COUNT < 5 )); then
       break
     fi
     echo "Too many terraform processes ($COUNT) at the moment, waiting..." >&2
     sleep 10
   done
 
-  terraform -chdir=$JOB/${CUSTOM_ENV_RUNNER} "$@"
+  terraform "-chdir=$JOB/${CUSTOM_ENV_RUNNER}" "$@"
 }
 
 # Rename OpenStack authentication variables to the right names.
