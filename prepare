@@ -81,7 +81,7 @@ done
 SUBSCRIPTION_REQUIRED=$(jq -r '.subscriptionNeeded' "${JOB}/${CUSTOM_ENV_RUNNER}/config.json")
 if [[ $SUBSCRIPTION_REQUIRED == "true" ]]; then
   set +x
-  echo "${CUSTOM_ENV_V2_RHN_REGISTRATION_SCRIPT}" | $SSH "$(sshUser)@${VM_IP}"
+  echo "${CUSTOM_ENV_V2_RHN_REGISTRATION_SCRIPT}" | $SSH "$(sshUser)@${VM_IP}" sudo bash
 fi
 
 PREPARE_SCRIPT=$(jq -r '.prepareScript' "${JOB}/${CUSTOM_ENV_RUNNER}/config.json")
