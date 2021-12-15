@@ -34,7 +34,7 @@ function runnerArch() {
 
 function terraform-wrapper() {
   while true; do
-    COUNT=$(pgrep -cf /usr/bin/terraform; true)
+    COUNT=$(pgrep -cf '^terraform'; true)
     if (( COUNT < 5 )); then
       break
     fi
