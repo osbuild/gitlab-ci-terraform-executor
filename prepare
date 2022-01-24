@@ -89,5 +89,31 @@ if [[ $PREPARE_SCRIPT != "null" ]]; then
   echo "$PREPARE_SCRIPT" | $SSH "$(sshUser)@${VM_IP}" bash
 fi
 
+# If a Schutzfile is present and repositories are defined, write them to the specified repofile
+if [ "$(curl -s -o /dev/null -w '%{http_code}' "$CUSTOM_ENV_CI_PROJECT_URL/-/raw/$CUSTOM_ENV_CI_COMMIT_SHA/Schutzfile")" = "200" ]; then
+    SCHUTZFILE=$(curl -L "$CUSTOM_ENV_CI_PROJECT_URL/-/raw/$CUSTOM_ENV_CI_COMMIT_SHA/Schutzfile")
+    KEYS=$(echo "$SCHUTZFILE" | jq keys - | jq -r .[] -)
+    ARCH=$($SSH "$(sshUser)@${VM_IP}" uname -m)
+    for KEY in $KEYS; do
+        # if a runner's basename starts with the key in a schutzfile,
+        # it's assumed schutzfile[key] applies to that runner
+        if [[ "$(basename "$CUSTOM_ENV_RUNNER")" =~ "$KEY".* ]]; then
+            REPOFILE=
+            REPOFILEPATH=$(echo "$SCHUTZFILE" | jq -r ."\"$KEY\".repos.file" -)
+            REPOS=$(echo "$SCHUTZFILE" | jq -r ."\"$KEY\".repos.$ARCH" -)
+            LENGTH=$(echo "$REPOS" | jq length -)
+            for i in $(seq 0 $((LENGTH - 1))); do
+                TITLE=$(echo "$REPOS" | jq -r .["$i"].title)
+                NAME=$(echo "$REPOS" | jq -r .["$i"].name)
+                BASEURL=$(echo "$REPOS" | jq -r .["$i"].baseurl)
+                REPOFILE+="[$TITLE]\nname=$NAME\nbaseurl=$BASEURL\nenabled=1\ngpgcheck=0\n"
+            done
+
+            # (over)write repository file
+            echo -e "$REPOFILE" | $SSH "$(sshUser)@${VM_IP}" sudo tee "$REPOFILEPATH"
+        fi
+    done
+fi
+
 # Install gitlab-runner
 $SSH "$(sshUser)@${VM_IP}" sudo dnf install -y "https://gitlab-runner-downloads.s3.amazonaws.com/latest/rpm/gitlab-runner_$(runnerArch).rpm"
