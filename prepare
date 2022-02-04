@@ -90,7 +90,7 @@ if [[ $PREPARE_SCRIPT != "null" ]]; then
 fi
 
 # If a Schutzfile is present and repositories are defined, write them to the specified repofile
-if [ "$(curl -s -o /dev/null -w '%{http_code}' "$CUSTOM_ENV_CI_PROJECT_URL/-/raw/$CUSTOM_ENV_CI_COMMIT_SHA/Schutzfile")" = "200" ]; then
+if [ "$(curl -s -o /dev/null -w '%{http_code}' "$CUSTOM_ENV_CI_PROJECT_URL/-/raw/$CUSTOM_ENV_CI_COMMIT_SHA/Schutzfile")" = "200" ] && [ "${CUSTOM_ENV_NIGHTLY:=false}" != "true" ]; then
     SCHUTZFILE=$(curl -L "$CUSTOM_ENV_CI_PROJECT_URL/-/raw/$CUSTOM_ENV_CI_COMMIT_SHA/Schutzfile")
     KEYS=$(echo "$SCHUTZFILE" | jq keys - | jq -r .[] -)
     ARCH=$($SSH "$(sshUser)@${VM_IP}" uname -m)
