@@ -32,17 +32,43 @@ function runnerArch() {
   cat "${JOB}/${CUSTOM_ENV_RUNNER}/config.json" | jq -r '.runnerArch'
 }
 
-function terraform-wrapper() {
-  while true; do
-    COUNT=$(pgrep -cf '^terraform'; true)
-    if (( COUNT < 5 )); then
-      break
+function isInternalAWS() {
+    if [[ "$CUSTOM_ENV_RUNNER" == *"aws"* && "$CUSTOM_ENV_INTERNAL_NETWORK" == "true" ]];then
+        return 0
+    else
+        return 1
     fi
-    echo "Too many terraform processes ($COUNT) at the moment, waiting..." >&2
-    sleep 10
-  done
+}
 
-  terraform "-chdir=$JOB/${CUSTOM_ENV_RUNNER}" "$@"
+function terraform-wrapper() {
+    while true; do
+        COUNT=$(pgrep -cf '^terraform'; true)
+        if (( COUNT < 5 )); then
+            break
+        fi
+        echo "Too many terraform processes ($COUNT) at the moment, waiting..." >&2
+        sleep 10
+    done
+    if isInternalAWS;then
+        while true; do
+            INTERNAL_SUBNET_A_FREE=$(aws ec2 describe-subnets --filters Name=tag:Name,Values=InternalA | jq -r .Subnets[].AvailableIpAddressCount)
+            INTERNAL_SUBNET_B_FREE=$(aws ec2 describe-subnets --filters Name=tag:Name,Values=InternalB | jq -r .Subnets[].AvailableIpAddressCount)
+            if [[ "$INTERNAL_SUBNET_A_FREE" -gt 0 ]];then
+                INTERNAL_SUBNET_A_ID=$(aws ec2 describe-subnets --filters Name=tag:Name,Values=InternalA | jq -r .Subnets[].SubnetId)
+                terraform "-chdir=$JOB/${CUSTOM_ENV_RUNNER}" "$@" -var="internal_subnet=$INTERNAL_SUBNET_A_ID"
+                break
+            elif [[ "$INTERNAL_SUBNET_B_FREE" -gt 0 ]];then
+                INTERNAL_SUBNET_B_ID=$(aws ec2 describe-subnets --filters Name=tag:Name,Values=InternalB | jq -r .Subnets[].SubnetId)
+                terraform "-chdir=$JOB/${CUSTOM_ENV_RUNNER}" "$@" -var="internal_subnet=$INTERNAL_SUBNET_B_ID"
+                break
+            else
+                echo "No free IPs in either internal subnet. Retrying in a bit."
+                sleep 30
+            fi
+        done
+    else
+         terraform "-chdir=$JOB/${CUSTOM_ENV_RUNNER}" "$@"
+    fi
 }
 
 # Rename OpenStack authentication variables to the right names.
