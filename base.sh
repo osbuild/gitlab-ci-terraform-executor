@@ -38,7 +38,9 @@ function terraform-wrapper() {
     sleep 10
   done
 
+
   export TF_PLUGIN_CACHE_DIR="$HOME/cache"
+  mkdir -p "${TF_PLUGIN_CACHE_DIR}"
   terraform "-chdir=$JOB/${CUSTOM_ENV_RUNNER}" "$@"
 }
 
