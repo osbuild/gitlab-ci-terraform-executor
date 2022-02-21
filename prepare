@@ -21,29 +21,6 @@ TEMP=$(mktemp -d)
 git clone https://github.com/osbuild/gitlab-ci-terraform.git "$TEMP"
 git -C "$TEMP" checkout "$TERRAFORM_COMMIT"
 
-# If maxInstances are defined for this runner, wait until we have a free slot.
-# Each runner type has its own directory - in each of these directories,
-# there's one directory for each job. Therefore, we know how many jobs
-# are running for a specific runner type. This script periodically checks
-# how many jobs are running on a runner type. If there are less jobs than
-# MAX_JOBS, it just creates a new directory here to "allocate a slot".
-# Note that this is racy but in reality it works good enough.
-MAX_JOBS=$(cat "$TEMP/${CUSTOM_ENV_RUNNER}/config.json" | jq -r .maxInstances)
-
-if [[ $MAX_JOBS != "null" && $CUSTOM_ENV_CI_RUNNER_TAGS != "terraform/openstack" ]]; then
-  while true; do
-    # ShellCheck prefers `find` over `ls`, `ls` should be fine though in this
-    # case
-    # shellcheck disable=SC2012
-    COUNT=$(ls "$RUNNER_DIR" | wc -l)
-    if [[ $COUNT < $MAX_JOBS ]]; then
-      break
-    fi
-    echo Waiting for a free runner slot...
-    sleep 10
-  done
-fi
-
 mv "$TEMP" "$JOB"
 
 if [ "${CUSTOM_ENV_INTERNAL_NETWORK:-}" ]; then
