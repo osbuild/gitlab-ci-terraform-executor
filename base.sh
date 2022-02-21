@@ -35,7 +35,7 @@ function runnerArch() {
 function terraform-wrapper() {
   while true; do
     COUNT=$(pgrep -cf '^terraform'; true)
-    if (( COUNT < 5 )); then
+    if (( COUNT < 10 )); then
       break
     fi
     echo "Too many terraform processes ($COUNT) at the moment, waiting..." >&2
