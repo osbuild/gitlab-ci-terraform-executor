@@ -12,12 +12,8 @@ set -euo pipefail
 JOBS="/home/$(whoami)/jobs"
 mkdir -p "${JOBS}"
 
-# create directory the specified runner
-RUNNER_DIR="${JOBS}/${CUSTOM_ENV_RUNNER}"
-mkdir -p "${RUNNER_DIR}"
-
 # define a directory for this specific job
-JOB="${RUNNER_DIR}/${CUSTOM_ENV_CI_JOB_ID}"
+JOB="${JOBS}/${CUSTOM_ENV_CI_JOB_ID}"
 
 # ServerAliveInterval helps with bad connectivity from/to the internal
 # VPC
