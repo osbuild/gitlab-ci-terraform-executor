@@ -28,6 +28,14 @@ function runnerArch() {
   cat "${JOB}/${CUSTOM_ENV_RUNNER}/config.json" | jq -r '.runnerArch'
 }
 
+function waitForUserLogout() {
+    COMMAND="who -s | wc -l"
+    RESULT=$("$SSH" "$(sshUser)@${VM_IP}" "$COMMAND")
+	while (( "$RESULT" > 0 )); do
+		sleep 30
+	done
+}
+
 function terraform-wrapper() {
   while true; do
     COUNT=$(pgrep -cf '^terraform'; true)
