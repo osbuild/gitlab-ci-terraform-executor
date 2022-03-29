@@ -75,19 +75,21 @@ if [ "$(curl -s -o /dev/null -w '%{http_code}' "$CUSTOM_ENV_CI_PROJECT_URL/-/raw
         # if a runner's basename starts with the key in a schutzfile,
         # it's assumed schutzfile[key] applies to that runner
         if [[ "$(basename "$CUSTOM_ENV_RUNNER")" =~ "$KEY".* ]]; then
-            REPOFILE=
-            REPOFILEPATH=$(echo "$SCHUTZFILE" | jq -r ."\"$KEY\".repos.file" -)
-            REPOS=$(echo "$SCHUTZFILE" | jq -r ."\"$KEY\".repos.$ARCH" -)
-            LENGTH=$(echo "$REPOS" | jq length -)
-            for i in $(seq 0 $((LENGTH - 1))); do
-                TITLE=$(echo "$REPOS" | jq -r .["$i"].title)
-                NAME=$(echo "$REPOS" | jq -r .["$i"].name)
-                BASEURL=$(echo "$REPOS" | jq -r .["$i"].baseurl)
-                REPOFILE+="[$TITLE]\nname=$NAME\nbaseurl=$BASEURL\nenabled=1\ngpgcheck=0\n"
+            REPOFILES_COUNT=$(echo "$SCHUTZFILE" | jq -r ."\"$KEY\".repos | length")
+            for j in $(seq 0 $((REPOFILES_COUNT - 1))); do
+                REPOFILEPATH=$(echo "$SCHUTZFILE" | jq -r ."\"$KEY\".repos[$j].file" -)
+                REPOS=$(echo "$SCHUTZFILE" | jq -r ."\"$KEY\".repos[$j].$ARCH" -)
+                LENGTH=$(echo "$REPOS" | jq length -)
+                for i in $(seq 0 $((LENGTH - 1))); do
+                    TITLE=$(echo "$REPOS" | jq -r .["$i"].title)
+                    NAME=$(echo "$REPOS" | jq -r .["$i"].name)
+                    BASEURL=$(echo "$REPOS" | jq -r .["$i"].baseurl)
+                    REPOFILE+="[$TITLE]\nname=$NAME\nbaseurl=$BASEURL\nenabled=1\ngpgcheck=0\n"
+                done
+                # (over)write repository file
+                echo -e "$REPOFILE" | $SSH "$(sshUser)@${VM_IP}" sudo tee "$REPOFILEPATH"
+                unset REPOFILE
             done
-
-            # (over)write repository file
-            echo -e "$REPOFILE" | $SSH "$(sshUser)@${VM_IP}" sudo tee "$REPOFILEPATH"
         fi
     done
 fi
