@@ -32,9 +32,10 @@ function waitForUserLogout() {
     COMMAND="who -s | wc -l"
     VM_IP=$(cat "${JOB}/ip")
     RESULT=$($SSH "$(sshUser)@${VM_IP}" "$COMMAND")
-	while (( "$RESULT" > 0 )); do
-		sleep 30
-	done
+    while (( "$RESULT" > 0 )); do
+        sleep 30
+        RESULT=$($SSH "$(sshUser)@${VM_IP}" "$COMMAND")
+    done
 }
 
 function terraform-wrapper() {
