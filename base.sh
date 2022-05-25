@@ -39,9 +39,11 @@ function waitForUserLogout() {
 }
 
 function terraform-wrapper() {
+  # terraform is very memory hungry so we have to limit the maximum number of terraform concurrent processes,
+  # otherwise the OOM killer will be mean to a random process
   while true; do
     COUNT=$(pgrep -cf '^terraform'; true)
-    if (( COUNT < 10 )); then
+    if (( COUNT < 40 )); then
       break
     fi
     echo "Too many terraform processes ($COUNT) at the moment, waiting..." >&2
