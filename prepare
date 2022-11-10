@@ -31,10 +31,10 @@ fi
 tee "$JOB/${CUSTOM_ENV_RUNNER}/terraform.tfvars" << EOF
 internal_network = ${INTERNAL_NETWORK}
 job_name         = "${CUSTOM_ENV_CI_JOB_NAME}"
-project          = ${CUSTOM_ENV_CI_PROJECT_NAME}
-branch           = ${CUSTOM_ENV_CI_COMMIT_BRANCH}
-pipeline_id      = ${CUSTOM_ENV_CI_PIPELINE_ID}
-pipeline_source  = ${CUSTOM_ENV_CI_PIPELINE_SOURCE}
+project          = "${CUSTOM_ENV_CI_PROJECT_NAME}"
+branch           = "${CUSTOM_ENV_CI_COMMIT_BRANCH}"
+pipeline_id      = "${CUSTOM_ENV_CI_PIPELINE_ID}"
+pipeline_source  = "${CUSTOM_ENV_CI_PIPELINE_SOURCE}"
 EOF
 
 # Spin up the instance
