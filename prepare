@@ -105,4 +105,5 @@ if [ "$(curl -s -o /dev/null -w '%{http_code}' "$CUSTOM_ENV_CI_PROJECT_URL/-/raw
 fi
 
 # Install gitlab-runner
+$SSH "$(sshUser)@${VM_IP}" sudo dnf clean all
 $SSH "$(sshUser)@${VM_IP}" sudo dnf install -y "https://gitlab-runner-downloads.s3.amazonaws.com/latest/rpm/gitlab-runner_$(runnerArch).rpm"
