@@ -106,4 +106,21 @@ fi
 
 # Install gitlab-runner
 $SSH "$(sshUser)@${VM_IP}" sudo dnf clean all
-$SSH "$(sshUser)@${VM_IP}" sudo dnf install -y "https://gitlab-runner-downloads.s3.amazonaws.com/latest/rpm/gitlab-runner_$(runnerArch).rpm"
+
+# retry install because of a race condition in dnf/subscription-manager
+# which causes git-core to be missing. Retry until gitlab-runner is
+# actually installed
+echo "INFO: Will install gitlab-runner"
+for _LOOP_COUNTER in {0..30}; do
+    set +e
+    $SSH "$(sshUser)@${VM_IP}" sudo dnf install -y "https://gitlab-runner-downloads.s3.amazonaws.com/latest/rpm/gitlab-runner_$(runnerArch).rpm"
+    set -e
+
+    if $SSH "$(sshUser)@${VM_IP}" "rpm -q gitlab-runner"; then
+        echo "INFO: gitlab-runner has been installed"
+        break
+    fi
+    echo "INFO: retrying ...."
+    sleep 10
+done
+$SSH "$(sshUser)@${VM_IP}" "rpm -q gitlab-runner"
