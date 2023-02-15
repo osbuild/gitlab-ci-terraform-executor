@@ -37,6 +37,10 @@ pipeline_id      = "${CUSTOM_ENV_CI_PIPELINE_ID}"
 pipeline_source  = "${CUSTOM_ENV_CI_PIPELINE_SOURCE}"
 EOF
 
+# Add GCP credentials to the JOB folder
+echo "${CUSTOM_ENV_IMAGE_BUILDER_CI_GOOGLE_CREDENTIALS:-}" > "${JOB}/gcp-credentials.json"
+export GOOGLE_APPLICATION_CREDENTIALS="${JOB}/gcp-credentials.json"
+
 # Spin up the instance
 terraform-wrapper init
 terraform-wrapper apply -auto-approve
