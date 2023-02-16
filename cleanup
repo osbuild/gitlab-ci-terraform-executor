@@ -5,6 +5,8 @@
 currentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=./base.sh
 source "${currentDir}/base.sh"
+# Set the GCP credentials again for cleanup
+export GOOGLE_APPLICATION_CREDENTIALS="${JOB}/gcp-credentials.json"
 
 # we want to run as many commands as possible
 set +e
