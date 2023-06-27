@@ -109,7 +109,8 @@ if [ "$(curl -s -o /dev/null -w '%{http_code}' "$CUSTOM_ENV_CI_PROJECT_URL/-/raw
 fi
 
 # Install gitlab-runner
-$SSH "$(sshUser)@${VM_IP}" sudo dnf clean all
+# NOTE: libdnf5 5.0.14 returns an error if the cache directory is missing, ignore it.
+$SSH "$(sshUser)@${VM_IP}" sudo dnf clean all || true
 
 # retry install because of a race condition in dnf/subscription-manager
 # which causes git-core to be missing. Retry until gitlab-runner is
