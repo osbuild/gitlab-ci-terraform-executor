@@ -15,6 +15,9 @@ mkdir -p "${JOBS}"
 # define a directory for this specific job
 JOB="${JOBS}/${CUSTOM_ENV_CI_JOB_ID}"
 
+# Workaround for https://github.com/hashicorp/terraform/issues/32901
+export TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_FILE=yes
+
 # ServerAliveInterval helps with bad connectivity from/to the internal
 # VPC
 SSH="ssh -o ServerAliveInterval=1 -o ServerAliveCountMax=600 -o StrictHostKeyChecking=no"
