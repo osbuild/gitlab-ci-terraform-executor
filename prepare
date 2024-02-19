@@ -37,6 +37,12 @@ pipeline_id      = "${CUSTOM_ENV_CI_PIPELINE_ID}"
 pipeline_source  = "${CUSTOM_ENV_CI_PIPELINE_SOURCE}"
 EOF
 
+if [ "${CUSTOM_ENV_IAM_INSTANCE_PROFILE:-}" ]; then
+    tee -a "$JOB/${CUSTOM_ENV_RUNNER}/terraform.tfvars" <<EOF
+iam_instance_profile = "${CUSTOM_ENV_IAM_INSTANCE_PROFILE}"
+EOF
+fi
+
 # Add GCP credentials to the JOB folder
 echo "${CUSTOM_ENV_IMAGE_BUILDER_CI_GOOGLE_CREDENTIALS:-}" > "${JOB}/gcp-credentials.json"
 export GOOGLE_APPLICATION_CREDENTIALS="${JOB}/gcp-credentials.json"
