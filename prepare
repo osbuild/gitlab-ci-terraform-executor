@@ -73,6 +73,10 @@ for i in $(seq 1 90); do
     sleep 1s
 done
 
+# Show block devices and mountpoints
+$SSH "$(sshUser)@${VM_IP}" "sudo lsblk"
+$SSH "$(sshUser)@${VM_IP}" "sudo cat /etc/fstab"
+
 # RHEL in OpenStack must be subscribed here in order to install gitlab-runner
 # dependencies (git)
 SUBSCRIPTION_REQUIRED=$(jq -r '.subscriptionNeeded' "${JOB}/${CUSTOM_ENV_RUNNER}/config.json")
