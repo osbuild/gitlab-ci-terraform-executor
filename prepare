@@ -124,7 +124,9 @@ $SSH "$(sshUser)@${VM_IP}" sudo dnf clean all || true
 echo "INFO: Will install gitlab-runner"
 for _LOOP_COUNTER in {0..30}; do
     set +e
-    $SSH "$(sshUser)@${VM_IP}" sudo dnf install -y "https://gitlab-runner-downloads.s3.amazonaws.com/latest/rpm/gitlab-runner_$(runnerArch).rpm" || true
+    $SSH "$(sshUser)@${VM_IP}" sudo dnf install -y \
+        "https://s3.dualstack.us-east-1.amazonaws.com/gitlab-runner-downloads/latest/rpm/gitlab-runner-helper-images.rpm" \
+        "https://s3.dualstack.us-east-1.amazonaws.com/gitlab-runner-downloads/latest/rpm/gitlab-runner_$(runnerArch).rpm" || true
     set -e
 
     if $SSH "$(sshUser)@${VM_IP}" "rpm -q gitlab-runner"; then
