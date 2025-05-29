@@ -32,7 +32,7 @@ function runnerArch() {
 }
 
 function waitForUserLogout() {
-    COMMAND="who -s | wc -l"
+    COMMAND="who -u | grep -v '?' | wc -l"
     VM_IP=$(cat "${JOB}/ip")
     RESULT=$($SSH "$(sshUser)@${VM_IP}" "$COMMAND")
     while (( "$RESULT" > 0 )); do
