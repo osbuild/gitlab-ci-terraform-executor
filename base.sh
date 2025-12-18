@@ -35,7 +35,7 @@ function waitForUserLogout() {
     COMMAND="who -u | grep -v '?' | wc -l"
     VM_IP=$(cat "${JOB}/ip")
     RESULT=$($SSH "$(sshUser)@${VM_IP}" "$COMMAND")
-    while (( "$RESULT" > 0 )); do
+    while (( "${RESULT:-0}" > 0 )); do
         sleep 30
         RESULT=$($SSH "$(sshUser)@${VM_IP}" "$COMMAND")
     done
@@ -46,7 +46,7 @@ function terraform-wrapper() {
   # otherwise the OOM killer will be mean to a random process
   while true; do
     COUNT=$(pgrep -cf '^terraform'; true)
-    if (( COUNT < 40 )); then
+    if (( "${COUNT:-0}" < 40 )); then
       break
     fi
     echo "Too many terraform processes ($COUNT) at the moment, waiting..." >&2
