@@ -14,7 +14,14 @@ function cleanup {
 }
 trap cleanup ERR
 
-TERRAFORM_COMMIT=$(curl -L "$CUSTOM_ENV_CI_PROJECT_URL/-/raw/$CUSTOM_ENV_CI_COMMIT_SHA/schutzbot/terraform")
+TERRAFORM_COMMIT=$(curl -fL --retry 5 --retry-delay 15 --retry-all-errors \
+    "$CUSTOM_ENV_CI_PROJECT_URL/-/raw/$CUSTOM_ENV_CI_COMMIT_SHA/schutzbot/terraform")
+
+# Check if the variable is empty before proceeding (because of curl option -f)
+if [ -z "$TERRAFORM_COMMIT" ]; then
+    echo "ERROR: Failed to fetch TERRAFORM_COMMIT after multiple retries."
+    exit 1
+fi
 
 # Get all terraform config files
 TEMP=$(mktemp -d)
