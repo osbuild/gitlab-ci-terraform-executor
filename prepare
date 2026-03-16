@@ -14,8 +14,12 @@ function cleanup {
 }
 trap cleanup ERR
 
+section_start terr_commit "Finding terraform commit"
+
 TERRAFORM_COMMIT=$(curl -fL --retry 5 --retry-delay 15 --retry-all-errors \
     "$CUSTOM_ENV_CI_PROJECT_URL/-/raw/$CUSTOM_ENV_CI_COMMIT_SHA/schutzbot/terraform")
+
+section_end terr_commit
 
 # Check if the variable is empty before proceeding (because of curl option -f)
 if [ -z "$TERRAFORM_COMMIT" ]; then
@@ -23,10 +27,14 @@ if [ -z "$TERRAFORM_COMMIT" ]; then
     exit 1
 fi
 
+section_start terr_checkout "Checking out terraform config files"
+
 # Get all terraform config files
 TEMP=$(mktemp -d)
 git clone https://github.com/osbuild/gitlab-ci-terraform.git "$TEMP"
 git -C "$TEMP" checkout "$TERRAFORM_COMMIT"
+
+section_end terr_checkout
 
 mv "$TEMP" "$JOB"
 
@@ -54,14 +62,20 @@ fi
 echo "${CUSTOM_ENV_IMAGE_BUILDER_CI_GOOGLE_CREDENTIALS:-}" > "${JOB}/gcp-credentials.json"
 export GOOGLE_APPLICATION_CREDENTIALS="${JOB}/gcp-credentials.json"
 
+section_start terraform_apply "Applying terraform"
+
 # Spin up the instance
 terraform-wrapper init
 terraform-wrapper apply -auto-approve
+
+section_end terraform_apply
 
 # Get its IP address and cache it in $JOB/ip. `terraform output` is actually
 # pretty expensive call.
 VM_IP=$(terraform-wrapper output -json | jq -r .ip_address.value[0])
 echo "${VM_IP}" > "${JOB}/ip"
+
+section_start wait_sshd "Waiting for sshd"
 
 # Wait for the machine.
 echo "Waiting for sshd to be available"
@@ -79,6 +93,8 @@ for i in $(seq 1 90); do
 
     sleep 1s
 done
+
+section_end wait_sshd
 
 # RHEL in OpenStack must be subscribed here in order to install gitlab-runner
 # dependencies (git)
@@ -121,6 +137,8 @@ if [ "$(curl -s -o /dev/null -w '%{http_code}' "$CUSTOM_ENV_CI_PROJECT_URL/-/raw
     done
 fi
 
+section_start install_runner "Installing gitlab-runner"
+
 # Install gitlab-runner
 # NOTE: libdnf5 5.0.14 returns an error if the cache directory is missing, ignore it.
 $SSH "$(sshUser)@${VM_IP}" sudo dnf clean all || true
@@ -143,4 +161,7 @@ for _LOOP_COUNTER in {0..30}; do
     echo "INFO: retrying ...."
     sleep 10
 done
+
+section_end install_runner
+
 $SSH "$(sshUser)@${VM_IP}" "rpm -q gitlab-runner"
