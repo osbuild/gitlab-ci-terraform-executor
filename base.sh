@@ -1,4 +1,5 @@
 #!/bin/bash
+# vim: set ts=2 sw=2 et:
 # shellcheck disable=SC2034
 # SC2034 - Ignore unused variables because this script is meant to be sourced
 #          into other scripts.
@@ -21,6 +22,24 @@ export TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_FILE=yes
 # ServerAliveInterval helps with bad connectivity from/to the internal
 # VPC
 SSH="ssh -o ServerAliveInterval=1 -o ServerAliveCountMax=600 -o StrictHostKeyChecking=no"
+
+# Helper for GitLab foldable sections
+function section_start() {
+  local section_name=$1
+  local section_title=$2
+  local collapsed=${3:-true}
+  if [ "$collapsed" == "true" ]; then
+    echo -e "\e[0Ksection_start:$(date +%s):${section_name}[collapsed=true]\r\e[0K\e[1;36m${section_title}\e[0m"
+  else
+    echo -e "\e[0Ksection_start:$(date +%s):${section_name}\r\e[0K\e[1;36m${section_title}\e[0m"
+  fi
+}
+
+# Helper for GitLab foldable sections
+function section_end() {
+  local section_name=$1
+  echo -e "\e[0Ksection_end:$(date +%s):${section_name}\r\e[0K"
+}
 
 # Helpers extracting values from the runner's config.json.
 function sshUser() {

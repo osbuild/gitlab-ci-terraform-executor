@@ -11,8 +11,14 @@ export GOOGLE_APPLICATION_CREDENTIALS="${JOB}/gcp-credentials.json"
 # we want to run as many commands as possible
 set +e
 
+section_start wait_logout "Wait for user logout"
+
 # if a user is logged in to the runner, wait until they're done
 waitForUserLogout
+
+section_end wait_logout
+
+section_start terraform_destroy "Terraform destroy and cleanup"
 
 terraform-wrapper destroy -auto-approve
 
@@ -22,3 +28,5 @@ ssh-keygen -R "$VM_IP"
 
 # Delete all job's data.
 rm -rf "$JOB"
+
+section_end terraform_destroy
