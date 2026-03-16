@@ -25,20 +25,19 @@ SSH="ssh -o ServerAliveInterval=1 -o ServerAliveCountMax=600 -o StrictHostKeyChe
 
 # Helper for GitLab foldable sections
 function section_start() {
-  local section_name=$1
+  local section_id="${1}_$$"
   local section_title=$2
   local collapsed=${3:-true}
-  if [ "$collapsed" == "true" ]; then
-    echo -e "\e[0Ksection_start:$(date +%s):${section_name}[collapsed=true]\r\e[0K\e[1;36m${section_title}\e[0m"
-  else
-    echo -e "\e[0Ksection_start:$(date +%s):${section_name}\r\e[0K\e[1;36m${section_title}\e[0m"
-  fi
+  local params=""
+  [ "$collapsed" == "true" ] && params="[collapsed=true]"
+
+  printf "\e[0Ksection_start:%s:%s%s\r\e[0K\e[1;36m%s\e[0m\n" "$(date +%s)" "$section_id" "$params" "$section_title"
 }
 
 # Helper for GitLab foldable sections
 function section_end() {
-  local section_name=$1
-  echo -e "\e[0Ksection_end:$(date +%s):${section_name}\r\e[0K"
+  local section_id="${1}_$$"
+  printf "\e[0Ksection_end:%s:%s\r\e[0K\n" "$(date +%s)" "$section_id"
 }
 
 # Helpers extracting values from the runner's config.json.
