@@ -20,8 +20,10 @@ JOB="${JOBS}/${CUSTOM_ENV_CI_JOB_ID}"
 export TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_FILE=yes
 
 # ServerAliveInterval helps with bad connectivity from/to the internal
-# VPC
-SSH="ssh -o ServerAliveInterval=1 -o ServerAliveCountMax=600 -o StrictHostKeyChecking=no"
+# VPC.
+# UserKnownHostsFile=/dev/null avoids reading/writing ~/.ssh/known_hosts so
+# ephemeral CI IPs do not bloat or conflict with stale entries.
+SSH="ssh -o ServerAliveInterval=1 -o ServerAliveCountMax=600 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
 # Helper for GitLab foldable sections
 function section_start() {
