@@ -148,7 +148,7 @@ $SSH "$(sshUser)@${VM_IP}" sudo dnf clean all || true
 # actually installed
 echo "INFO: Will install gitlab-runner"
 for _LOOP_COUNTER in {0..30}; do
-    if $SSH "$(sshUser)@${VM_IP}" "rpm -q gitlab-runner"; then
+    if $SSH "$(sshUser)@${VM_IP}" "rpm -q gitlab-runner" && [[ "${CUSTOM_ENV_FORCE_UPDATE_RUNNER:-0}" != "1" ]]; then
         echo "INFO: gitlab-runner has been installed"
         break
     fi
