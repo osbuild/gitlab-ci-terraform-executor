@@ -154,9 +154,14 @@ for _LOOP_COUNTER in {0..30}; do
     fi
 
     set +e
+    # runnerArch returns amd64, but the rpm is hosted as `gitlab-runner_x86_64.rpm`
+    ARCH=x86_64
+    if [[ $(runnerArch) == "aarch64" ]]; then
+        ARCH=aarch64
+    fi
     $SSH "$(sshUser)@${VM_IP}" sudo dnf install -y \
         "https://s3.dualstack.us-east-1.amazonaws.com/gitlab-runner-downloads/latest/rpm/gitlab-runner-helper-images.rpm" \
-        "https://s3.dualstack.us-east-1.amazonaws.com/gitlab-runner-downloads/latest/rpm/gitlab-runner_$(runnerArch).rpm"
+        "https://s3.dualstack.us-east-1.amazonaws.com/gitlab-runner-downloads/latest/rpm/gitlab-runner_$ARCH.rpm"
     EXIT_CODE="$?"
     set -e
 
